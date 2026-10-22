@@ -193,7 +193,7 @@ class MainActivity : ComponentActivity() {
         }
 
         MaterialTheme(colorScheme = scheme) {
-            CompositionLocalProvider(LocalLayoutDirection provides if (isArabic) LayoutDirection.Rtl else LayoutDirection.Ltr) {
+            CompositionLocalProvider(LocalLayoutDirection provides (if (isArabic) LayoutDirection.Rtl else LayoutDirection.Ltr)) {
                 SideEffect {
                     window.statusBarColor = scheme.background.toArgb()
                     window.navigationBarColor = scheme.background.toArgb()
@@ -202,7 +202,7 @@ class MainActivity : ComponentActivity() {
                     bars.isAppearanceLightNavigationBars = !dark
                 }
                 Scaffold(
-                    modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing),
+                    modifier = Modifier.fillMaxSize(),
                     containerColor = scheme.background,
                     bottomBar = {
                         if (screen == AppScreen.APPS || screen == AppScreen.FILES || screen == AppScreen.TOOLS) {
