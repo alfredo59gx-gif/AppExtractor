@@ -60,6 +60,7 @@ public class MainActivity extends Activity {
     private final List<AppItem> apps = new ArrayList<>();
     private final Set<String> selected = new LinkedHashSet<>();
     private String filter = "all";
+    private boolean showSystemApps = false;
     private String currentPage = "apps";
     private AppItem currentApp;
     private int lastExportApps = 0;
@@ -71,6 +72,7 @@ public class MainActivity extends Activity {
         prefs = getSharedPreferences("settings", MODE_PRIVATE);
         dark = prefs.getBoolean("dark", true);
         lang = prefs.getString("lang", "ar");
+        showSystemApps = prefs.getBoolean("showSystemApps", false);
         colors();
         loadApps();
         showPage("apps", null);
@@ -207,11 +209,9 @@ public class MainActivity extends Activity {
         searchRow.addView(search,new LinearLayout.LayoutParams(0,dp(49),1));
         LinearLayout.LayoutParams srp = new LinearLayout.LayoutParams(-1,-2); srp.bottomMargin=dp(9); root.addView(searchRow,srp);
 
-        LinearLayout filters = row();
-        addFilter(filters,"all",tr("الكل","All"));
-        addFilter(filters,"user",tr("المستخدم","User"));
-        addFilter(filters,"system",tr("النظام","System"));
-        LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1,dp(39)); fp.bottomMargin=dp(7); root.addView(filters,fp);
+        TextView listHint=text(tr("تظهر هنا تطبيقات المستخدم القابلة للاستخراج فقط. تطبيقات النظام والتطبيقات التي لا يمكن قراءة ملفاتها مخفية افتراضياً.","Only exportable user apps are shown. System apps and apps whose APK files cannot be read are hidden by default."),10,muted,false);
+        listHint.setPadding(dp(3),dp(2),dp(3),dp(8));
+        root.addView(listHint);
 
         count=text("",11,muted,false);
         count.setPadding(dp(2),dp(3),dp(2),dp(8)); root.addView(count);
@@ -293,6 +293,7 @@ public class MainActivity extends Activity {
                 Drawable icon=pm.getApplicationIcon(ai);
                 boolean system=(ai.flags & ApplicationInfo.FLAG_SYSTEM)!=0;
                 String version=pi.versionName==null?"":pi.versionName;
+                if (!canReadApkFiles(ai)) continue;
                 long size=0;
                 try { size=new File(ai.sourceDir).length(); } catch(Exception ignored) {}
                 apps.add(new AppItem(pi.packageName,label,icon,system,version,size,ai.sourceDir));
@@ -302,11 +303,25 @@ public class MainActivity extends Activity {
         refreshGrid();
     }
 
+    private boolean canReadApkFiles(ApplicationInfo ai) {
+        if (ai == null || ai.sourceDir == null) return false;
+        File base = new File(ai.sourceDir);
+        if (!base.isFile() || !base.canRead() || base.length() <= 0) return false;
+        if (ai.splitSourceDirs != null) {
+            for (String splitPath : ai.splitSourceDirs) {
+                if (splitPath == null) return false;
+                File split = new File(splitPath);
+                if (!split.isFile() || !split.canRead() || split.length() <= 0) return false;
+            }
+        }
+        return true;
+    }
+
     private List<AppItem> filteredApps() {
         String q=search==null?"":search.getText().toString().trim().toLowerCase(Locale.ROOT);
         List<AppItem> out=new ArrayList<>();
         for(AppItem a:apps) {
-            boolean category="all".equals(filter)||("system".equals(filter)&&a.system)||("user".equals(filter)&&!a.system);
+            boolean category = showSystemApps || !a.system;
             if(category&&(q.isEmpty()||a.label.toLowerCase(Locale.ROOT).contains(q)||a.pkg.toLowerCase(Locale.ROOT).contains(q))) out.add(a);
         }
         return out;
@@ -516,10 +531,19 @@ public class MainActivity extends Activity {
             lang=ar()?"en":"ar"; prefs.edit().putString("lang",lang).apply(); showPage("settings",null);
         });
         TextView ex=text(tr("الاستخراج","Extraction"),12,accent,true); ex.setPadding(dp(4),dp(15),dp(4),dp(8)); root.addView(ex);
-        addSettingToggle(tr("إظهار تطبيقات النظام","Show system apps"),tr("إظهارها ضمن قائمة التطبيقات","Show system apps in the list"),!"user".equals(filter),()->{
-            filter="user".equals(filter)?"all":"user"; showPage("settings",null);
+        addSettingToggle(tr("إظهار تطبيقات النظام","Show system apps"),tr("مخفية افتراضياً؛ فعّل هذا الخيار لعرضها إذا كانت ملفاتها قابلة للقراءة.","Hidden by default; enable to show those with readable APK files."),showSystemApps,()->{
+            showSystemApps=!showSystemApps;
+            prefs.edit().putBoolean("showSystemApps",showSystemApps).apply();
+            showPage("settings",null);
         });
-        TextView note=text(tr("تُحفظ الملفات في Download/App Extractor. قد تحتوي بعض التطبيقات على عدة ملفات APK.","Files are saved to Download/App Extractor. Some apps contain multiple split APKs."),11,muted,false);
+        TextView securityTitle=text(tr("الخصوصية والأمان","Privacy and security"),12,accent,true);
+        securityTitle.setPadding(dp(4),dp(15),dp(4),dp(8));
+        root.addView(securityTitle);
+        TextView securityNote=text(tr("لا يحتاج التطبيق إلى اتصال بالإنترنت. قائمة التطبيقات وملفات APK تبقى على جهازك. بعض تطبيقات النظام أو التطبيقات المقسّمة قد لا تكون قابلة للاستخراج؛ تُخفى التطبيقات التي لا يمكن قراءة ملفاتها.","The app does not need internet access. The app list and exported APKs stay on your device. Some system or split apps may not be exportable; apps whose APK files cannot be read are hidden."),11,muted,false);
+        securityNote.setPadding(dp(12),dp(12),dp(12),dp(12));
+        securityNote.setBackground(shape(panel,13,stroke));
+        LinearLayout.LayoutParams secp=new LinearLayout.LayoutParams(-1,-2); secp.topMargin=dp(3); root.addView(securityNote,secp);
+        TextView note=text(tr("تُحفظ الملفات في Download/App Extractor. التطبيقات المقسّمة قد تنتج أكثر من ملف APK، ولا يكفي الملف الأساسي دائماً لإعادة تثبيتها.","Files are saved in Download/App Extractor. Split apps may export multiple APK files; the base file alone may not reinstall the app."),11,muted,false);
         note.setPadding(dp(12),dp(12),dp(12),dp(12)); note.setBackground(shape(panel,13,stroke)); LinearLayout.LayoutParams np=new LinearLayout.LayoutParams(-1,-2); np.topMargin=dp(9); root.addView(note,np);
         View spacer=new View(this); root.addView(spacer,new LinearLayout.LayoutParams(1,0,1));
         addBottomNav("tools");
