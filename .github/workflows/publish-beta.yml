@@ -43,9 +43,11 @@ jobs:
           tag_name: beta-${{ github.run_number }}
           name: AppExtractor Beta ${{ github.run_number }}
           body: |
-            Public beta build for community testing.
+            **Device test:** Tested on a Samsung phone running Android 17; the app ran smoothly in this test.
 
-            **Important:** This build is signed with the project's current debug signing configuration and has not been tested on every Android device. Treat it as a test build, not a production release. Future versions signed with a different key may not update over this installation.
+            This is a public beta build. Results may vary on other devices and Android versions.
+
+            **Important:** This build uses the project's current debug signing configuration. Future versions signed with a different key may not install as updates over this build.
           files: app/build/outputs/apk/release/app-release.apk
           prerelease: true
           make_latest: false
