@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
@@ -549,7 +550,7 @@ private fun AppTile(app: InstalledApp, checked: Boolean, onClick: () -> Unit, on
                         Icon(Icons.Default.CheckCircle, contentDescription = "Selected", tint = Color.White, modifier = Modifier.padding(1.dp))
                     }
                 } else {
-                    IconButton(onClick = onCheck, modifier = Modifier.size(19.dp)) { }
+                    IconButton(onClick = onCheck, modifier = Modifier.size(21.dp)) { Icon(Icons.Default.RadioButtonUnchecked, contentDescription = "Select", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(17.dp)) }
                 }
             }
             Spacer(Modifier.height(6.dp))
