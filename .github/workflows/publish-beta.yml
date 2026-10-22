@@ -1,0 +1,51 @@
+name: Publish AppExtractor Beta APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Install Android SDK packages
+        run: yes | sdkmanager --licenses && sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+
+      - name: Build release APK
+        run: gradle assembleRelease
+
+      - name: Publish downloadable beta release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: beta-${{ github.run_number }}
+          name: AppExtractor Beta ${{ github.run_number }}
+          body: |
+            Public beta build for community testing.
+
+            **Important:** This build is signed with the project's current debug signing configuration and has not been tested on every Android device. Treat it as a test build, not a production release. Future versions signed with a different key may not update over this installation.
+          files: app/build/outputs/apk/release/app-release.apk
+          prerelease: true
+          make_latest: false
