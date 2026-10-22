@@ -184,7 +184,7 @@ public class MainActivity extends Activity {
         h.addView(labels,lp);
         if (showSettings) {
             TextView set = text("⚙", 23, fg, true);
-            set.gravity=Gravity.CENTER; set.background=shape(panel,13,stroke);
+            set.setGravity(Gravity.CENTER); set.setBackground(shape(panel,13,stroke));
             h.addView(set,new LinearLayout.LayoutParams(dp(46),dp(44)));
             set.setOnClickListener(v->showPage("settings",null));
         }
