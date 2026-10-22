@@ -391,8 +391,7 @@ public class MainActivity extends Activity {
                     List<String> paths=new ArrayList<>();
                     if(ai.sourceDir!=null) paths.add(ai.sourceDir);
                     if(ai.splitSourceDirs!=null) for(String p:ai.splitSourceDirs) if(p!=null) paths.add(p);
-                    String label=String.valueOf(getPackageManager().getApplicationLabel(ai))
-                        .replaceAll("[\\\\/:*?\\"<>|]","_").replaceAll("\\\\s+","_");
+                    String label=sanitizeFileName(String.valueOf(getPackageManager().getApplicationLabel(ai)));
                     for(int i=0;i<paths.size();i++) {
                         String suffix=paths.size()==1?"":"_part"+(i+1);
                         saveApk(paths.get(i),label+suffix+".apk");
@@ -472,7 +471,7 @@ public class MainActivity extends Activity {
         try {
             String[] proj={MediaStore.Downloads._ID,MediaStore.Downloads.DISPLAY_NAME};
             String selection=MediaStore.Downloads.RELATIVE_PATH+"=? AND "+MediaStore.Downloads.DISPLAY_NAME+" LIKE ?";
-            String[] args={Environment.DIRECTORY_DOWNLOADS+"/App Extractor/",appName.replaceAll("[\\\\/:*?\\"<>|]","_").replaceAll("\\\\s+","_")+"%.apk"};
+            String[] args={Environment.DIRECTORY_DOWNLOADS+"/App Extractor/",sanitizeFileName(appName)+"%.apk"};
             c=getContentResolver().query(MediaStore.Downloads.EXTERNAL_CONTENT_URI,proj,selection,args,MediaStore.Downloads.DATE_ADDED+" DESC");
             if(c!=null&&c.moveToFirst()) return Uri.withAppendedPath(MediaStore.Downloads.EXTERNAL_CONTENT_URI,String.valueOf(c.getLong(0)));
         } catch(Exception ignored) {} finally { if(c!=null)c.close(); }
@@ -613,6 +612,19 @@ public class MainActivity extends Activity {
                 byte[] buf=new byte[65536]; int n; while((n=in.read(buf))!=-1) out.write(buf,0,n);
             }
         }
+    }
+
+    private String sanitizeFileName(String value) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < value.length(); i++) {
+            char ch = value.charAt(i);
+            if (Character.isLetterOrDigit(ch) || ch == '.' || ch == '_' || ch == '-' || ch == ' ') {
+                result.append(ch);
+            } else {
+                result.append('_');
+            }
+        }
+        return result.toString().trim().replace(' ', '_');
     }
 
     private String formatBytes(long bytes) {
