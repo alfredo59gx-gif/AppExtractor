@@ -1,18 +1,18 @@
 # AppExtractor
 
-A native Android APK export utility, built with Kotlin and Jetpack Compose.
+A native Android APK export utility built with Kotlin and Jetpack Compose.
 
 ## Features
-- Browse user-installed apps in a searchable grid.
-- Hide system apps by default; reveal them in Settings only when their APK files are readable.
-- Multi-select apps, export base APKs and split APK parts, and save them under `Download/App Extractor`.
-- Use Android's system uninstall confirmation.
-- Separate APK file manager, Settings, and About screens.
-- Arabic/English language toggle and dark/light theme preferences.
-- No Internet permission; app lists and exported APK files stay on device.
+- Searchable grid of exportable installed apps.
+- System apps hidden by default; optional display from Settings if their APK files are readable.
+- Multi-select, base APK and split APK export to `Download/App Extractor`.
+- Android system uninstall confirmation.
+- Separate APK file manager, app details, settings, and about screens.
+- Arabic/English language choice and dark/light theme.
+- No Internet permission; app list and exported APK files stay on device.
 
 ## Build
-GitHub Actions builds the debug APK. Open the Actions tab and download the `AppExtractor-debug-apk` artifact from a successful workflow run.
+GitHub Actions produces an optimized release variant artifact named `AppExtractor-optimized-apk`. Download it from a successful run in the Actions tab. The APK is signed with the standard Android debug key for personal testing.
 
 ## Security notes
-This app is intended for personal sideloading/testing. It requests package visibility to list apps. It does not bypass Android's package installer, Play Protect, or uninstall confirmations. A debug build may still show an Android/Play Protect warning because it is sideloaded and debug-signed; that warning cannot safely be disabled by app code.
+This utility is intended for personal sideloading/testing. It needs package visibility to list installed apps and requests package uninstall through Android's system interface. It does not bypass the package installer or Play Protect. Because it is sideloaded and signed with a debug key, Android or Play Protect may still show an installation warning; app code cannot safely suppress those protections. For public distribution, use a private release keystore you control.
